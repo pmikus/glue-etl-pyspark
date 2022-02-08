@@ -28,7 +28,7 @@ from pyspark.sql.types import StructType
 
 S3_BUCKET="fdio-logs-s3-cloudfront-index"
 S3_SILO="vex-yul-rot-jenkins-1"
-PATH=f"s3://{S3_BUCKET}/{S3_SILO}/csit-vpp-perf"
+PATH=f"s3://{S3_BUCKET}/{S3_SILO}/csit-*-perf-*"
 SUFFIX="info.json.gz"
 IGNORE_SUFFIX=[
     "suite.info.json.gz",
@@ -129,7 +129,7 @@ glue_context = GlueContext(spark_context)
 spark = glue_context.spark_session
 
 # files of interest
-path_list = wr.s3.list_objects(
+paths = wr.s3.list_objects(
     path=PATH,
     suffix=SUFFIX,
     last_modified_begin=LAST_MODIFIED_BEGIN,
@@ -138,8 +138,10 @@ path_list = wr.s3.list_objects(
     ignore_empty=True
 )
 
-for part_type in ["mrr", "ndrpdr", "soak"]:
-    out_sdf = process_json_to_dataframe(part_type, path_list)
+filtered_paths = [path for path in paths if "daily" in path or "weekly" in path]
+
+for schema_name in ["mrr", "ndrpdr", "soak"]:
+    out_sdf = process_json_to_dataframe(schema_name, filtered_paths)
     out_sdf.show(truncate=False)
     out_sdf.printSchema()
     out_sdf \
@@ -151,3 +153,4 @@ for part_type in ["mrr", "ndrpdr", "soak"]:
         .partitionBy("test_type", "year", "month", "day") \
         .mode("append") \
         .parquet("trending.parquet")
+        #f"s3a://{S3_BUCKET}/csit/parquet/trending.parquet"
