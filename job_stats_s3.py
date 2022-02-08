@@ -92,7 +92,7 @@ glue_context = GlueContext(spark_context)
 spark = glue_context.spark_session
 
 # files of interest
-path_list = wr.s3.list_objects(
+paths = wr.s3.list_objects(
     path=PATH,
     suffix=SUFFIX,
     last_modified_begin=LAST_MODIFIED_BEGIN,
