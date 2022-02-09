@@ -44,7 +44,7 @@ LAST_MODIFIED_BEGIN=utc.localize(
         "%Y-%m-%d"
     )
 )
-LAST_MODIFIED_END=LAST_MODIFIED_BEGIN + timedelta(1)
+LAST_MODIFIED_END=LAST_MODIFIED_BEGIN - timedelta(1)
 
 
 def flatten_frame(nested_sdf):
