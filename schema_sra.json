@@ -30,6 +30,12 @@
             "nullable": true,
             "type": "string"
         }
+        {
+            "metadata": {},
+            "name": "stats_type",
+            "nullable": true,
+            "type": "string"
+        }
     ],
     "type": "struct"
 }
