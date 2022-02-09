@@ -38,13 +38,13 @@ IGNORE_SUFFIX=[
     "setup.output.info.json.gz",
     "teardown.output.info.json.gz"
 ]
-LAST_MODIFIED_BEGIN=utc.localize(
+LAST_MODIFIED_END=utc.localize(
     datetime.strptime(
         f"{datetime.now().year}-{datetime.now().month}-{datetime.now().day}",
         "%Y-%m-%d"
     )
 )
-LAST_MODIFIED_END=LAST_MODIFIED_BEGIN - timedelta(1)
+LAST_MODIFIED_BEGIN=LAST_MODIFIED_END - timedelta(1)
 
 
 def flatten_frame(nested_sdf):
