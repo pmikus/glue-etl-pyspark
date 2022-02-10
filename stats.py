@@ -115,5 +115,5 @@ for schema_name in ["sra"]:
         .write \
         .partitionBy("stats_type", "year", "month", "day") \
         .mode("append") \
-        .parquet("stats.parquet")
-        #f"s3a://{S3_BUCKET}/csit/parquet/stats.parquet"
+        .parquet(f"s3a://{S3_BUCKET}/csit/sandbox/parquet/stats.parquet")
+        #f"s3a://{S3_BUCKET}/csit/parquet/stats.parquet"  "stats.parquet"
