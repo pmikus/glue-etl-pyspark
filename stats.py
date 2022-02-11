@@ -18,6 +18,7 @@
 from datetime import datetime, timedelta
 from json import load
 from pytz import utc
+from time import sleep
 
 import awswrangler as wr
 from awsglue.context import GlueContext
@@ -111,14 +112,21 @@ for schema_name in ["sra"]:
         .withColumn("year", lit(datetime.now().year)) \
         .withColumn("month", lit(datetime.now().month)) \
         .withColumn("day", lit(datetime.now().day)) \
-        .repartition(1) \
-        .write \
-        .partitionBy("stats_type", "year", "month", "day") \
-        .mode("append") \
-        .parquet("stats.parquet")    
+        .repartition(1)
+
     wr.s3.to_parquet(
-        df=out_sdf,
+        df=out_sdf.toPandas(),
         path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats",
         dataset=True,
-        partition_cols=[schema_name]
+        partition_cols=["stats_type", "year", "month", "day"],
+        mode="append"
     )
+
+# workaround for broken s3a driver.
+sleep(1)
+wr.s3.delete_objects(
+    wr.s3.list_objects(
+        path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats/",
+        suffix="index.html"
+    )
+)
