@@ -119,5 +119,6 @@ for schema_name in ["sra"]:
     wr.s3.to_parquet(
         df=out_sdf,
         path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats.parquet",
-        dataset=True
+        dataset=True,
+        partition_cols=[schema_name]
     )
