@@ -107,7 +107,7 @@ for schema_name in ["sra"]:
     out_sdf = process_json_to_dataframe(schema_name, filtered_paths)
     out_sdf.show(truncate=False)
     out_sdf.printSchema()
-    out_sdf \
+    out_sdf = out_sdf \
         .withColumn("year", lit(datetime.now().year)) \
         .withColumn("month", lit(datetime.now().month)) \
         .withColumn("day", lit(datetime.now().day)) \
@@ -118,7 +118,7 @@ for schema_name in ["sra"]:
         .parquet("stats.parquet")    
     wr.s3.to_parquet(
         df=out_sdf,
-        path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats.parquet",
+        path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats",
         dataset=True,
         partition_cols=[schema_name]
     )
