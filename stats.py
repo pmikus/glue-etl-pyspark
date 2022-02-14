@@ -17,18 +17,20 @@
 
 from datetime import datetime, timedelta
 from json import load
+from os import environ
 from pytz import utc
 from time import sleep
 
 import awswrangler as wr
 from awsglue.context import GlueContext
+from boto3 import session
 from pyspark.context import SparkContext
 from pyspark.sql.functions import lit
 from pyspark.sql.types import StructType
 
-S3_BUCKET="fdio-logs-s3-cloudfront-index"
-S3_SILO="vex-yul-rot-jenkins-1"
-PATH=f"s3://{S3_BUCKET}/{S3_SILO}/csit-*-perf-*"
+S3_LOGS_BUCKET="fdio-logs-s3-cloudfront-index"
+S3_DOCS_BUCKET="fdio-docs-s3-cloudfront-index"
+PATH=f"s3://{S3_LOGS_BUCKET}/vex-yul-rot-jenkins-1/csit-*-perf-*"
 SUFFIX="suite.info.json.gz"
 IGNORE_SUFFIX=[]
 LAST_MODIFIED_END=utc.localize(
@@ -116,17 +118,13 @@ for schema_name in ["sra"]:
 
     wr.s3.to_parquet(
         df=out_sdf.toPandas(),
-        path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats",
+        path=f"s3://{S3_DOCS_BUCKET}/csit/sandbox/parquet/stats",
         dataset=True,
         partition_cols=["stats_type", "year", "month", "day"],
-        mode="append"
+        mode="append",
+        boto3_session=session.Session(
+            aws_access_key_id=environ["OUT_AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=environ["OUT_AWS_SECRET_ACCESS_KEY"],
+            region_name=environ["OUT_AWS_DEFAULT_REGION"]
+        )
     )
-
-# workaround for broken s3a driver.
-sleep(1)
-wr.s3.delete_objects(
-    wr.s3.list_objects(
-        path=f"s3://{S3_BUCKET}/csit/sandbox/parquet/stats/",
-        suffix="index.html"
-    )
-)
