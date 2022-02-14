@@ -17,18 +17,20 @@
 
 from datetime import datetime, timedelta
 from json import load
+from os import environ
 from pytz import utc
 
 import awswrangler as wr
 from awsglue.context import GlueContext
+from boto3 import session
 from pyspark.context import SparkContext
 from pyspark.sql.functions import col, lit, regexp_replace
 from pyspark.sql.types import StructType
 
 
-S3_BUCKET="fdio-logs-s3-cloudfront-index"
-S3_SILO="vex-yul-rot-jenkins-1"
-PATH=f"s3://{S3_BUCKET}/{S3_SILO}/csit-*-perf-*"
+S3_LOGS_BUCKET="fdio-logs-s3-cloudfront-index"
+S3_DOCS_BUCKET="fdio-docs-s3-cloudfront-index"
+PATH=f"s3://{S3_LOGS_BUCKET}/vex-yul-rot-jenkins-1/csit-*-perf-*"
 SUFFIX="info.json.gz"
 IGNORE_SUFFIX=[
     "suite.info.json.gz",
@@ -144,13 +146,21 @@ for schema_name in ["mrr", "ndrpdr", "soak"]:
     out_sdf = process_json_to_dataframe(schema_name, filtered_paths)
     out_sdf.show(truncate=False)
     out_sdf.printSchema()
-    out_sdf \
+    out_sdf = out_sdf \
         .withColumn("year", lit(datetime.now().year)) \
         .withColumn("month", lit(datetime.now().month)) \
         .withColumn("day", lit(datetime.now().day)) \
-        .repartition(1) \
-        .write \
-        .partitionBy("test_type", "year", "month", "day") \
-        .mode("append") \
-        .parquet("trending.parquet")
-        #f"s3a://{S3_BUCKET}/csit/parquet/trending.parquet"
+        .repartition(1)
+
+    wr.s3.to_parquet(
+        df=out_sdf.toPandas(),
+        path=f"s3://{S3_DOCS_BUCKET}/csit/sandbox/parquet/trending",
+        dataset=True,
+        partition_cols=["test_type", "year", "month", "day"],
+        mode="append",
+        boto3_session=session.Session(
+            aws_access_key_id=environ["OUT_AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=environ["OUT_AWS_SECRET_ACCESS_KEY"],
+            region_name=environ["OUT_AWS_DEFAULT_REGION"]
+        )
+    )
