@@ -19,9 +19,9 @@ from datetime import datetime, timedelta
 from json import load
 from os import environ
 from pytz import utc
-from time import sleep
 
 import awswrangler as wr
+from awswrangler.exceptions import EmptyDataFrame
 from awsglue.context import GlueContext
 from boto3 import session
 from pyspark.context import SparkContext
@@ -116,15 +116,20 @@ for schema_name in ["sra"]:
         .withColumn("day", lit(datetime.now().day)) \
         .repartition(1)
 
-    wr.s3.to_parquet(
-        df=out_sdf.toPandas(),
-        path=f"s3://{S3_DOCS_BUCKET}/csit/sandbox/parquet/stats",
-        dataset=True,
-        partition_cols=["stats_type", "year", "month", "day"],
-        mode="append",
-        boto3_session=session.Session(
-            aws_access_key_id=environ["OUT_AWS_ACCESS_KEY_ID"],
-            aws_secret_access_key=environ["OUT_AWS_SECRET_ACCESS_KEY"],
-            region_name=environ["OUT_AWS_DEFAULT_REGION"]
+    try:
+        wr.s3.to_parquet(
+            df=out_sdf.toPandas(),
+            path=f"s3://{S3_DOCS_BUCKET}/csit/sandbox/parquet/stats",
+            dataset=True,
+            partition_cols=["stats_type", "year", "month", "day"],
+            compression="snappy",
+            use_threads=True,
+            mode="overwrite_partitions",
+            boto3_session=session.Session(
+                aws_access_key_id=environ["OUT_AWS_ACCESS_KEY_ID"],
+                aws_secret_access_key=environ["OUT_AWS_SECRET_ACCESS_KEY"],
+                region_name=environ["OUT_AWS_DEFAULT_REGION"]
+            )
         )
-    )
+    except EmptyDataFrame:
+        pass
