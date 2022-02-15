@@ -159,7 +159,9 @@ for schema_name in ["mrr", "ndrpdr", "soak"]:
             path=f"s3://{S3_DOCS_BUCKET}/csit/sandbox/parquet/trending",
             dataset=True,
             partition_cols=["test_type", "year", "month", "day"],
-            mode="append",
+            compression="snappy",
+            use_threads=True,
+            mode="overwrite_partitions",
             boto3_session=session.Session(
                 aws_access_key_id=environ["OUT_AWS_ACCESS_KEY_ID"],
                 aws_secret_access_key=environ["OUT_AWS_SECRET_ACCESS_KEY"],
