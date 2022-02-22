@@ -58,7 +58,7 @@ def process_json_to_dataframe(schema_name, paths):
     ]
 
     # load schemas
-    with open(f"schema_{schema_name}.json", "r", encoding="UTF-8") as f_schema:
+    with open(f"stats_{schema_name}.json", "r", encoding="UTF-8") as f_schema:
         schema = StructType.fromJson(load(f_schema))
 
     # create empty DF out of schemas
@@ -104,10 +104,8 @@ paths = wr.s3.list_objects(
     ignore_empty=True
 )
 
-filtered_paths = [path for path in paths if "daily" in path or "weekly" in path]
-
 for schema_name in ["sra"]:
-    out_sdf = process_json_to_dataframe(schema_name, filtered_paths)
+    out_sdf = process_json_to_dataframe(schema_name, paths)
     out_sdf.show(truncate=False)
     out_sdf.printSchema()
     out_sdf = out_sdf \
@@ -119,7 +117,7 @@ for schema_name in ["sra"]:
     try:
         wr.s3.to_parquet(
             df=out_sdf.toPandas(),
-            path=f"s3://{S3_DOCS_BUCKET}/csit/sandbox/parquet/stats",
+            path=f"s3://{S3_DOCS_BUCKET}/csit/parquet/stats",
             dataset=True,
             partition_cols=["stats_type", "year", "month", "day"],
             compression="snappy",
