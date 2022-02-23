@@ -26,6 +26,12 @@
         },
         {
             "metadata": {},
+            "name": "dut_version",
+            "nullable": true,
+            "type": "string"
+        },
+        {
+            "metadata": {},
             "name": "result",
             "nullable": true,
             "type": {
